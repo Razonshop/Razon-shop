@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Products</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body{ font-family:Arial; background:#f5f5f5; }
+
+.navbar{
+    background:#156ee2;
+    padding:12px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.nav-left ul{ list-style:none; display:flex; gap:20px; }
+.nav-left ul li a{ color:white; text-decoration:none; font-size:15px; }
+.nav-left ul li a:hover{ color:#00ffcc; }
+.profile{
+    width:40px; height:40px; border-radius:50%;
+    background:#00cc66; color:white;
+    display:flex; justify-content:center; align-items:center;
+    font-weight:bold; font-size:18px; cursor:pointer;
+}
+
+#cartBtn{
+    position:fixed; bottom:30px; right:30px;
+    background:#156ee2; color:white; border:none;
+    border-radius:50px; padding:14px 22px;
+    font-size:16px; cursor:pointer; z-index:1000;
+    box-shadow:0 4px 15px rgba(0,0,0,0.3);
+    display:flex; align-items:center; gap:8px;
+}
+#cartBtn:hover{ background:#0f55b5; }
+#cartCount{
+    background:#ff3b3b; color:white; border-radius:50%;
+    width:22px; height:22px; display:flex;
+    align-items:center; justify-content:center;
+    font-size:12px; font-weight:bold;
+}
+
+#toast{
+    position:fixed; bottom:100px; right:30px;
+    background:#222; color:white; padding:14px 20px;
+    border-radius:10px; z-index:2000; display:none;
+    flex-direction:column; gap:10px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.3); min-width:220px;
+}
+#toast p{ font-size:14px; margin:0; }
+#toast .toast-btns{ display:flex; gap:8px; }
+#toast .toast-btns button{
+    flex:1; padding:6px; border:none;
+    border-radius:5px; cursor:pointer; font-size:13px; margin:0; width:auto;
+}
+#toast .goto{ background:#00cc66; color:white; }
+#toast .close-t{ background:#555; color:white; }
+
+#detailModal{
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.6); z-index:4000;
+    justify-content:center; align-items:center; padding:20px;
+}
+#detailModal.show{ display:flex; }
+#detailBox{
+    background:white; border-radius:16px;
+    width:100%; max-width:680px;
+    max-height:90vh; overflow-y:auto;
+}
+#detailBox .detail-img{
+    width:100%; height:320px;
+    object-fit:cover; border-radius:16px 16px 0 0;
+}
+#detailBody{ padding:24px; }
+#detailBody .detail-badge{
+    display:inline-block;
+    background:#e8f4ff; color:#156ee2;
+    font-size:12px; padding:3px 10px;
+    border-radius:20px; margin-bottom:12px;
+}
+#detailBody h2{ font-size:22px; margin-bottom:8px; }
+#detailBody .detail-rating{ color:#f5a623; font-size:16px; margin-bottom:8px; }
+#detailBody .detail-price{
+    font-size:24px; font-weight:bold;
+    color:#156ee2; margin-bottom:12px;
+}
+#detailBody .detail-desc{
+    font-size:14px; color:#555;
+    line-height:1.7; margin-bottom:16px;
+}
+#detailBody .detail-features{
+    background:#f9f9f9; border-radius:8px;
+    padding:12px 16px; margin-bottom:20px;
+}
+#detailBody .detail-features h4{ font-size:13px; color:#333; margin-bottom:8px; }
+#detailBody .detail-features ul{ list-style:none; padding:0; }
+#detailBody .detail-features ul li{ font-size:13px; color:#555; padding:3px 0; }
+#detailBody .detail-features ul li::before{ content:"✓ "; color:#00cc66; }
+.detail-btns{ display:flex; gap:12px; }
+.detail-btns button{
+    flex:1; padding:12px; border:none;
+    border-radius:8px; font-size:15px;
+    cursor:pointer; font-weight:bold; margin:0; width:auto;
+}
+.btn-add{ background:#156ee2; color:white; }
+.btn-add:hover{ background:#0f55b5; }
+.btn-close{ background:#f0f0f0; color:#333; }
+.btn-close:hover{ background:#ddd; }
+
+#cartModal{
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.5); z-index:3000;
+    justify-content:center; align-items:center;
+}
+#cartModal.show{ display:flex; }
+#cartBox{
+    background:white; width:90%; max-width:500px;
+    border-radius:12px; padding:24px; max-height:80vh; overflow-y:auto;
+}
+#cartBox h2{
+    margin-bottom:16px; font-size:20px;
+    border-bottom:1px solid #eee; padding-bottom:10px;
+}
+.cart-item{
+    display:flex; justify-content:space-between;
+    align-items:center; padding:10px 0;
+    border-bottom:1px solid #f0f0f0; font-size:14px;
+}
+.cart-item button{
+    background:red; color:white; border:none;
+    padding:4px 10px; border-radius:4px;
+    cursor:pointer; width:auto; margin:0; font-size:12px;
+}
+#closeCart{
+    margin-top:16px; width:100%; padding:10px;
+    background:#156ee2; color:white; border:none;
+    border-radius:6px; cursor:pointer; font-size:15px;
+}
+
+#searchHeader{
+    padding:20px 40px 0;
+    font-size:16px;
+    color:#333;
+    display:none;
+    align-items:center;
+    gap:12px;
+}
+#searchHeader a{
+    font-size:13px;
+    color:#156ee2;
+    text-decoration:none;
+}
+
+.products{
+    padding:40px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:20px;
+}
+.card{
+    background:white; padding:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+    text-align:center; border-radius:8px;
+    transition:transform 0.2s, box-shadow 0.2s;
+}
+.card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+.card img{
+    width:100%; height:200px; object-fit:cover;
+    border-radius:5px; cursor:pointer;
+}
+.card h3{ margin-top:10px; font-size:15px; cursor:pointer; }
+.card h3:hover{ color:#156ee2; }
+.card .price{ color:#156ee2; font-weight:bold; margin:6px 0; font-size:14px; }
+.card button{
+    margin-top:10px; padding:8px; width:100%;
+    background:#222; color:white; border:none;
+    cursor:pointer; border-radius:4px;
+}
+.card button:hover{ background:#00cc66; }
+
+#noResult{
+    text-align:center;
+    padding:60px 20px;
+    color:#999;
+    font-size:18px;
+    display:none;
+    grid-column: 1/-1;
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="about us.html">About Us</a></li>
+            <li><a href="search.html">Search</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="FAQ.html">FAQ</a></li>
+            <li><a href="product.html">Products</a></li>
+        </ul>
+    </div>
+    <div id="profileContainer" style="position:relative;">
+        <div id="profileLetter" class="profile">U</div>
+    </div>
+</nav>
+
+<button id="cartBtn" onclick="openCart()">
+    🛒 Cart <span id="cartCount">0</span>
+</button>
+
+<div id="toast">
+    <p>✅ Item added to cart!</p>
+    <div class="toast-btns">
+        <button class="goto" onclick="openCart()">Go to Cart</button>
+        <button class="close-t" onclick="closeToast()">✕ Close</button>
+    </div>
+</div>
+
+<div id="detailModal">
+    <div id="detailBox">
+        <img id="detailImg" class="detail-img" src="" alt="">
+        <div id="detailBody">
+            <span class="detail-badge" id="detailBadge"></span>
+            <h2 id="detailName"></h2>
+            <div class="detail-rating" id="detailRating"></div>
+            <div class="detail-price" id="detailPrice"></div>
+            <p class="detail-desc" id="detailDesc"></p>
+            <div class="detail-features">
+                <h4>Key Features</h4>
+                <ul id="detailFeatures"></ul>
+            </div>
+            <div class="detail-btns">
+                <button class="btn-add" id="detailCartBtn">🛒 Add to Cart</button>
+                <button class="btn-close" onclick="closeDetail()">✕ Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cartModal">
+    <div id="cartBox">
+        <h2>🛒 Your Cart</h2>
+        <div id="cartItems"></div>
+        <button id="closeCart" onclick="closeCart()">Close</button>
+    </div>
+</div>
+
+<div id="searchHeader">
+    <span id="searchHeaderText"></span>
+    <a href="product.html">✕ Clear filter</a>
+</div>
+
+<div class="products" id="productsGrid">
+    <div id="noResult">
+        No results found for your search.<br>
+        <a href="product.html" style="color:#156ee2;font-size:15px;">View all products</a>
+    </div>
+</div>
+
+<script>
+    // Login check
+if(localStorage.getItem("loggedIn") !== "true"){
+    window.location.href = "login.html";
+}
+const products = [
+    { id:1, name:"Running Shoes", category:"Shoes", price:"$2,499", rating:"★★★★☆ (4.2)", img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop", desc:"High-performance running shoes designed for speed and comfort. Lightweight sole with superior grip for all terrains.", features:["Lightweight foam sole","Breathable mesh upper","Anti-slip grip","Available in 5 colors"], tags:["shoe","shoes","running","sport","footwear"] },
+    { id:2, name:"Sports Shoes", category:"Shoes", price:"$1,999", rating:"★★★★☆ (4.0)", img:"https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=600&auto=format&fit=crop", desc:"Versatile sports shoes perfect for gym, jogging, and casual wear.", features:["Extra cushioning","Flexible sole","Sweat-resistant lining","Durable build"], tags:["shoe","shoes","sports","gym","footwear"] },
+    { id:3, name:"Leather Shoes", category:"Shoes", price:"$3,299", rating:"★★★★★ (4.7)", img:"https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=600&auto=format&fit=crop", desc:"Premium genuine leather shoes for formal occasions. Handcrafted with attention to detail.", features:["Genuine leather","Handcrafted","Comfortable insole","Formal & semi-formal"], tags:["shoe","shoes","leather","formal","footwear"] },
+    { id:4, name:"Formal Shoes", category:"Shoes", price:"$2,799", rating:"★★★★☆ (4.1)", img:"https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop", desc:"Classic formal shoes for office and events. Polished look with durable construction.", features:["Classic design","Durable sole","Easy to polish","Office & events"], tags:["shoe","shoes","formal","office","footwear"] },
+    { id:5, name:"White Sneakers", category:"Shoes", price:"$1,799", rating:"★★★★☆ (4.3)", img:"https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop", desc:"Trendy white sneakers that go with everything. Clean minimal design for everyday style.", features:["Minimal design","Easy to clean","Casual everyday wear","Unisex style"], tags:["shoe","shoes","sneakers","white","casual","footwear"] },
+    { id:6, name:"White T-Shirt", category:"T-Shirts", price:"$499", rating:"★★★★☆ (4.4)", img:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&auto=format&fit=crop", desc:"Classic White t-shirt made from 100% pure cotton. Comfortable fit for everyday wear.", features:["100% pure cotton","Regular fit","Machine washable","S to XXL sizes"], tags:["tshirt","t-shirt","t shirt","shirt","black","clothing","top"] },
+    { id:7, name:"Black T-Shirt", category:"T-Shirts", price:"$449", rating:"★★★★☆ (4.2)", img:"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&auto=format&fit=crop", desc:"Essential Black t-shirt, soft and breathable. A wardrobe staple for everyone.", features:["Soft fabric","Breathable material","Crew neck","Everyday essential"], tags:["tshirt","t-shirt","t shirt","shirt","white","clothing","top"] },
+    { id:8, name:"Graphic T-Shirt", category:"T-Shirts", price:"$599", rating:"★★★★☆ (4.0)", img:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop", desc:"Trendy graphic t-shirt with unique artistic prints. Stand out from the crowd.", features:["Unique print","Soft cotton blend","Regular fit","Casual style"], tags:["tshirt","t-shirt","t shirt","shirt","graphic","print","clothing"] },
+    { id:9, name:"Cotton T-Shirt", category:"T-Shirts", price:"$399", rating:"★★★★☆ (4.1)", img:"https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&auto=format&fit=crop", desc:"Super soft cotton t-shirt perfect for summer. Lightweight and breathable fabric.", features:["Super soft","Lightweight","Summer wear","Multiple colors"], tags:["tshirt","t-shirt","t shirt","shirt","cotton","clothing","top"] },
+    { id:10, name:"Oversized T-Shirt", category:"T-Shirts", price:"$649", rating:"★★★★★ (4.5)", img:"https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&auto=format&fit=crop", desc:"Trendy oversized t-shirt for a relaxed streetwear look.", features:["Oversized fit","Streetwear style","Premium fabric","Unisex design"], tags:["tshirt","t-shirt","t shirt","shirt","oversized","streetwear","clothing"] },
+    { id:11, name:"Laptop", category:"Laptop", price:"$40,999", rating:"★★★★★ (4.8)", img:"https://images.unsplash.com/photo-1511385348-a52b4a160dc2?w=600&auto=format&fit=crop", desc:"Timeless Laptop with elegant design. Perfect for office use.configration:- intel i5 12th gen 6gb Ram 128 gb NVME ssd.", features:["Stainless steel body","Scratch-resistant glass","Water resistant","1 year warranty"], tags:["","laptop","classic","heavy work","grey laptop"] },
+    { id:12, name:"Smart Watch", category:"Watches", price:"$8,999", rating:"★★★★☆ (4.3)", img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop", desc:"Feature-packed smart watch with health tracking, notifications, and 7-day battery life.", features:["Heart rate monitor","7-day battery","Notification alerts","IP67 waterproof"], tags:["watch","watches","smart","smartwatch","fitness","wristwatch"] },
+    { id:13, name:"Luxury Watch", category:"Watches", price:"$15,999", rating:"★★★★★ (4.9)", img:"https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&auto=format&fit=crop", desc:"Premium luxury watch crafted with finest materials. A statement of elegance and class.", features:["Premium materials","Swiss movement","Sapphire glass","Gift box included"], tags:["watch","watches","luxury","premium","wristwatch"] },
+    { id:14, name:"Digital Watch", category:"Watches", price:"$1,299", rating:"★★★★☆ (4.0)", img:"https://images.unsplash.com/photo-1508057198894-247b23fe5ade?w=600&auto=format&fit=crop", desc:"Reliable digital watch with multiple functions. Great for sports and outdoor activities.", features:["Digital display","Stopwatch","Alarm","Water resistant"], tags:["watch","watches","digital","sport","wristwatch"] },
+    { id:15, name:"Sports Watch", category:"Watches", price:"$3,499", rating:"★★★★☆ (4.2)", img:"https://images.unsplash.com/photo-1495857000853-fe46c8aefc30?w=600&auto=format&fit=crop", desc:"Rugged sports watch built for athletes and adventure lovers.", features:["Shock resistant","GPS tracking","Long battery","Rugged design"], tags:["watch","watches","sports","athletic","wristwatch"] },
+    { id:16, name:"Backpack", category:"Bags", price:"$1,499", rating:"★★★★☆ (4.3)", img:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop", desc:"Spacious backpack perfect for college, travel, and daily use. Multiple compartments.", features:["Large capacity","Multiple pockets","Padded straps","Laptop compartment"], tags:["bag","bags","backpack","travel","college","rucksack"] },
+    { id:17, name:"Leather Bag", category:"Bags", price:"$2,999", rating:"★★★★★ (4.6)", img:"https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&auto=format&fit=crop", desc:"Premium leather bag for professionals. Stylish and durable for everyday use.", features:["Genuine leather","Professional look","Multiple sections","Durable stitching"], tags:["bag","bags","leather","professional","office"] },
+    { id:18, name:"Travel Bag", category:"Bags", price:"$2,199", rating:"★★★★☆ (4.1)", img:"https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=600&auto=format&fit=crop", desc:"Large travel bag designed for long trips. Water-resistant with easy-roll wheels.", features:["Large capacity","Water resistant","Smooth wheels","TSA lock compatible"], tags:["bag","bags","travel","luggage","trip","suitcase"] },
+    { id:19, name:"School Bag", category:"Bags", price:"$899", rating:"★★★★☆ (4.0)", img:"https://images.unsplash.com/photo-1491637639811-60e2756cc1c7?w=600&auto=format&fit=crop", desc:"Comfortable school bag with ergonomic design. Perfect for students.", features:["Ergonomic design","Padded back","Multiple pockets","Lightweight"], tags:["bag","bags","school","student","kids"] },
+    { id:20, name:"Hand Bag", category:"Bags", price:"$1,799", rating:"★★★★☆ (4.4)", img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop", desc:"Elegant handbag for women. Stylish design with ample space for daily essentials.", features:["Stylish design","Spacious interior","Magnetic closure","Multiple colors"], tags:["bag","bags","handbag","hand bag","women","purse"] },
+    { id:21, name:"Headphones", category:"Headphones", price:"$2,499", rating:"★★★★☆ (4.3)", img:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop", desc:"Premium wired headphones with crystal-clear sound and deep bass.", features:["Crystal clear sound","Deep bass","Foldable design","3.5mm jack"], tags:["headphone","headphones","audio","music","wired","earphone"] },
+    { id:22, name:"Wireless Headphones", category:"Headphones", price:"$4,999", rating:"★★★★★ (4.6)", img:"https://images.unsplash.com/photo-1580894908361-967195033215?w=600&auto=format&fit=crop", desc:"Wireless Bluetooth headphones with active noise cancellation. 30-hour battery life.", features:["Noise cancellation","30hr battery","Bluetooth 5.0","Foldable"], tags:["headphone","headphones","wireless","bluetooth","audio","music"] },
+    { id:23, name:"Gaming Headset", category:"Headphones", price:"$3,299", rating:"★★★★☆ (4.2)", img:"https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=600&auto=format&fit=crop", desc:"Immersive gaming headset with surround sound and noise-cancelling mic.", features:["7.1 surround sound","Noise-cancelling mic","RGB lighting","Compatible with PC & console"], tags:["headphone","headphones","gaming","headset","game","audio"] },
+    { id:24, name:"Earbuds", category:"Headphones", price:"$1,999", rating:"★★★★☆ (4.1)", img:"https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&auto=format&fit=crop", desc:"True wireless earbuds with excellent sound quality and comfortable fit.", features:["True wireless","20hr total battery","Touch controls","IPX4 water resistant"], tags:["earbuds","earbud","earphone","wireless","audio","music"] },
+    { id:25, name:"Bluetooth Earphones", category:"Headphones", price:"$1,299", rating:"★★★★☆ (4.0)", img:"https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=600&auto=format&fit=crop", desc:"Bluetooth neckband earphones with powerful sound and long battery life.", features:["Bluetooth 5.0","12hr battery","Magnetic earbuds","Built-in mic"], tags:["earphone","earphones","bluetooth","wireless","audio","neckband"] },
+];
+
+// ── SMART SEARCH ──
+const urlParams = new URLSearchParams(window.location.search);
+const searchQuery = urlParams.get("q");
+let filteredProducts = products;
+
+if(searchQuery){
+    const q = searchQuery.toLowerCase().trim();
+    filteredProducts = products.filter(p => {
+        return (
+            p.name.toLowerCase().includes(q) ||
+            p.category.toLowerCase().includes(q) ||
+            p.desc.toLowerCase().includes(q) ||
+            p.tags.some(tag => tag.includes(q) || q.includes(tag))
+        );
+    });
+
+    const header = document.getElementById("searchHeader");
+    header.style.display = "flex";
+    document.getElementById("searchHeaderText").innerText =
+        filteredProducts.length > 0
+        ? `Showing ${filteredProducts.length} results for "${searchQuery}"`
+        : `No results found for "${searchQuery}"`;
+}
+
+// ── RENDER ──
+const grid = document.getElementById("productsGrid");
+if(filteredProducts.length === 0){
+    document.getElementById("noResult").style.display = "block";
+} else {
+    filteredProducts.forEach(p => {
+        grid.innerHTML += `
+            <div class="card">
+                <img src="${p.img}" alt="${p.name}" onclick="openDetail(${p.id})">
+                <h3 onclick="openDetail(${p.id})">${p.name}</h3>
+                <div class="price">${p.price}</div>
+                <button onclick="addToCart('${p.name}')">Add to Cart</button>
+            </div>
+        `;
+    });
+}
+
+// ── PRODUCT DETAIL ──
+function openDetail(id){
+    const p = products.find(x => x.id === id);
+    document.getElementById("detailImg").src = p.img;
+    document.getElementById("detailBadge").innerText = p.category;
+    document.getElementById("detailName").innerText = p.name;
+    document.getElementById("detailRating").innerText = p.rating;
+    document.getElementById("detailPrice").innerText = p.price;
+    document.getElementById("detailDesc").innerText = p.desc;
+    document.getElementById("detailFeatures").innerHTML = p.features.map(f => `<li>${f}</li>`).join("");
+    document.getElementById("detailCartBtn").onclick = () => { addToCart(p.name); closeDetail(); };
+    document.getElementById("detailModal").classList.add("show");
+}
+function closeDetail(){ document.getElementById("detailModal").classList.remove("show"); }
+
+// ── PROFILE ──
+const user = localStorage.getItem("currentUser");
+const profileEl = document.getElementById("profileLetter");
+const container = document.getElementById("profileContainer");
+
+if(user){
+    profileEl.innerText = user.charAt(0).toUpperCase();
+    const dropdown = document.createElement("div");
+    dropdown.style.cssText = `display:none;position:absolute;right:0;top:50px;background:white;padding:15px;width:180px;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);z-index:999;`;
+    dropdown.innerHTML = `
+        <p style="margin:5px 0;font-size:14px;"><strong>Name:</strong> ${user}</p>
+        <button onclick="logout()" style="margin-top:10px;padding:5px;width:100%;border:none;background:red;color:white;border-radius:5px;cursor:pointer;">Logout</button>
+    `;
+    container.appendChild(dropdown);
+    profileEl.addEventListener("click", () => {
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    });
+} else {
+    container.innerHTML = `<a href="login.html" style="color:white;text-decoration:none;font-size:15px;">Login</a>`;
+}
+
+function logout(){
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+}
+
+// ── CART ──
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+updateCartCount();
+
+function addToCart(name){
+    cart.push(name);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    showToast();
+}
+function updateCartCount(){ document.getElementById("cartCount").innerText = cart.length; }
+
+let toastTimer;
+function showToast(){
+    const toast = document.getElementById("toast");
+    toast.style.display = "flex";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.style.display = "none", 3000);
+}
+function closeToast(){ document.getElementById("toast").style.display = "none"; }
+
+function openCart(){
+    closeToast();
+    document.getElementById("cartModal").classList.add("show");
+    const itemsDiv = document.getElementById("cartItems");
+    if(cart.length === 0){
+        itemsDiv.innerHTML = `<p style="text-align:center;color:#999;padding:20px;">Your cart is empty!</p>`;
+    } else {
+        itemsDiv.innerHTML = cart.map((item,i) => `
+            <div class="cart-item">
+                <span>${item}</span>
+                <button onclick="removeFromCart(${i})">Remove</button>
+            </div>
+        `).join("");
+    }
+}
+function removeFromCart(i){
+    cart.splice(i,1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    openCart();
+}
+function closeCart(){ document.getElementById("cartModal").classList.remove("show"); }
+</script>
+
+</body>
+</html>

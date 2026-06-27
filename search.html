@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search</title>
+    
+    <link rel="stylesheet" href="search.css">
+   
+</head>
+<body>
+    <div class="stars-container" id="starsContainer"></div>
+<nav class="navbar">
+    <div class="nav-left">
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="about us.html">About Us</a></li>
+            <li class="active"><a href="search.html">Search</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="FAQ.html">FAQ</a></li>
+            <li><a href="product.html">Products</a></li>
+        </ul>
+    </div>
+    <div id="profileContainer" style="position:relative;">
+        <div id="profileLetter" class="profile">U</div>
+    </div>
+</nav>
+
+<div class="search-section">
+    <h2>What are you looking for?</h2>
+    <div class="search-wrapper">
+        <input type="text" id="searchInput" placeholder="Search shoes, watches, bags..." autocomplete="off">
+        <button onclick="doSearch()">Search</button>
+        <div class="suggestions" id="suggestions"></div>
+    </div>
+    <div class="popular-tags">
+        <div class="tag" onclick="searchTag('Shoes')">👟 Shoes</div>
+        <div class="tag" onclick="searchTag('T-Shirts')">👕 T-Shirts</div>
+        <div class="tag" onclick="searchTag('Watches')">⌚ Watches</div>
+        <div class="tag" onclick="searchTag('Bags')">👜 Bags</div>
+        <div class="tag" onclick="searchTag('Headphones')">🎧 Headphones</div>
+        <div class="tag" onclick="searchTag('Wireless')">📡 Wireless</div>
+        <div class="tag" onclick="searchTag('Sneakers')">👟 Sneakers</div>
+        <div class="tag" onclick="searchTag('Gaming')">🎮 Gaming</div>
+    </div>
+</div>
+
+<script>
+// Profile
+const user = localStorage.getItem("currentUser");
+const profileEl = document.getElementById("profileLetter");
+const container = document.getElementById("profileContainer");
+
+if(user){
+    profileEl.innerText = user.charAt(0).toUpperCase();
+    const dropdown = document.createElement("div");
+    dropdown.style.cssText = `display:none;position:absolute;right:0;top:50px;background:white;padding:15px;width:180px;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);z-index:999;`;
+    dropdown.innerHTML = `
+        <p style="margin:5px 0;font-size:14px;"><strong>Name:</strong> ${user}</p>
+        <button onclick="logout()" style="margin-top:10px;padding:5px;width:100%;border:none;background:red;color:white;border-radius:5px;cursor:pointer;">Logout</button>
+    `;
+    container.appendChild(dropdown);
+    profileEl.addEventListener("click", () => {
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    });
+} else {
+    container.innerHTML = `<a href="login.html" style="color:white;text-decoration:none;font-size:15px;">Login</a>`;
+}
+
+function logout(){
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+}
+
+// Suggestions
+const allSuggestions = [
+    "Running Shoes","Sports Shoes","Leather Shoes","Formal Shoes","White Sneakers",
+    "Black T-Shirt","White T-Shirt","Graphic T-Shirt","Cotton T-Shirt","Oversized T-Shirt",
+    "Classic Watch","Smart Watch","Luxury Watch","Digital Watch","Sports Watch",
+    "Backpack","Leather Bag","Travel Bag","School Bag","Hand Bag",
+    "Headphones","Wireless Headphones","Gaming Headset","Earbuds","Bluetooth Earphones",
+    "Shoes","T-Shirts","Watches","Bags","Wireless","Gaming","Sneakers"
+];
+
+const input = document.getElementById("searchInput");
+const suggestionsBox = document.getElementById("suggestions");
+
+input.addEventListener("input", function(){
+    const q = this.value.trim().toLowerCase();
+    if(q.length < 1){ suggestionsBox.classList.remove("show"); return; }
+    const matches = allSuggestions.filter(s => s.toLowerCase().includes(q)).slice(0,6);
+    if(matches.length === 0){ suggestionsBox.classList.remove("show"); return; }
+    suggestionsBox.innerHTML = matches.map(s =>
+        `<div class="suggestion-item" onclick="selectSuggestion('${s}')">🔍 ${s}</div>`
+    ).join("");
+    suggestionsBox.classList.add("show");
+});
+
+document.addEventListener("click", function(e){
+    if(!e.target.closest(".search-wrapper")) suggestionsBox.classList.remove("show");
+});
+
+input.addEventListener("keypress", function(e){
+    if(e.key === "Enter") doSearch();
+});
+
+function selectSuggestion(val){
+    input.value = val;
+    suggestionsBox.classList.remove("show");
+    doSearch();
+}
+function doSearch(){
+    const q = input.value.trim();
+    if(q) window.location.href = "product.html?q=" + encodeURIComponent(q);
+}
+function searchTag(tag){
+    window.location.href = "product.html?q=" + encodeURIComponent(tag);
+}
+// Stars generator
+const starsContainer = document.getElementById("starsContainer");
+for(let i = 0; i < 150; i++){
+    const star = document.createElement("div");
+    star.classList.add("star");
+    const size = Math.random() * 3 + 1;
+    star.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        top: ${Math.random() * 100}%;
+        left: ${Math.random() * 100}%;
+        animation-duration: ${Math.random() * 3 + 2}s;
+        animation-delay: ${Math.random() * 3}s;
+        opacity: ${Math.random() * 0.7 + 0.1};
+    `;
+    starsContainer.appendChild(star);
+}
+</script>
+</body>
+</html>
